@@ -6,20 +6,22 @@
 _start:
 stacktop: .word 0x20001000
 .word reset
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
-.word hang
+.word nmi
+.word hardfault
+.word hang	@ reserved
+.word hang	@ reserved
+.word hang	@ reserved
+.word hang	@ reserved
+.word hang	@ reserved
+.word hang	@ reserved
+.word hang	@ reserved
+.word svc
+.word hang	@ reserved
+.word hang	@ reserved
+.word pendsv
+.word systick	@ SysTick, if implemented
+.word irq0
+.word irq1
 
 .thumb_func
 reset:
@@ -29,3 +31,14 @@ reset:
 .thumb_func
 hang:   b .
 
+.thumb_func
+nmi:    b .
+
+.thumb_func
+hardfault: b .
+
+.thumb_func
+irq0: b .
+
+.thumb_func
+irq1: b .
