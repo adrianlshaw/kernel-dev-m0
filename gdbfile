@@ -1,0 +1,6 @@
+target remote :1234
+monitor arm semihosting enable
+file main.elf
+set architecture arm
+set arm fallback-mode thumb
+break main
