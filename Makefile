@@ -6,6 +6,11 @@ LD = $(CROSS_COMPILE)ld
 OBJDUMP = $(CROSS_COMPILE)objdump
 OBJCOPY = $(CROSS_COMPILE)objcopy
 
+# Cortex-M0/M0+: thumbv6m-none-eabi
+# Cortex M3: thumbv7m-none-eabi
+# Cortex M4/M7 no FPU: thumbv7em-none-eabi
+# Coretex M4/M7 with FPU: thumbv7em-none-eabihf
+
 AFLAGS = --warn --fatal-warnings -mcpu=cortex-m0
 
 CFLAGS =	-mcpu=cortex-m0 \
@@ -46,6 +51,7 @@ docker-qemu:
 	@docker run -ti cortexm 
 
 test:
+	-pkill qemu-system-arm
 	@tmux new-session 'make qemu' \; \
 		split-window 'make gdb' \; \
 		select-layout even-horizontal
