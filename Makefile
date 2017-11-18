@@ -3,6 +3,7 @@ CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
 LD = $(CROSS_COMPILE)ld
+GDB = $(CROSS_COMPILE)gdb
 OBJDUMP = $(CROSS_COMPILE)objdump
 OBJCOPY = $(CROSS_COMPILE)objcopy
 
@@ -27,6 +28,9 @@ IMAGE := main
 
 all : $(IMAGE).bin
 
+rust:
+	rustc main.rs --emit=obj
+
 clean:
 	rm -f *.bin *.o *.elf *.list 
 
@@ -42,7 +46,7 @@ $(IMAGE).bin : memmap.ld vectors.o main.o
 	$(OBJCOPY) $(IMAGE).elf $(IMAGE).bin -O binary
 
 gdb: all
-	@gdb-multiarch $(IMAGE) -x gdbfile ./$(IMAGE).elf
+	$(GDB) $(IMAGE) -x gdbfile ./$(IMAGE).elf
 
 qemu:
 	@qemu-system-arm -S -gdb tcp::1234 -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).bin
@@ -51,7 +55,7 @@ docker-qemu:
 	@docker run -ti cortexm 
 
 test:
-	-pkill qemu-system-arm
+	-pkill -9 qemu-system-arm
 	@tmux new-session 'make qemu' \; \
-		split-window 'make gdb' \; \
+		split-window 'sleep 1 && make gdb' \; \
 		select-layout even-horizontal

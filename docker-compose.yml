@@ -1,0 +1,10 @@
+version: '2'
+services:
+ cortexm:
+  cap_add: 
+    - SYS_PTRACE
+  stdin_open: true
+  tty: true
+  image: cortexm
+  volumes:
+    - /home/user/github/kernel-dev-m0:/opt
