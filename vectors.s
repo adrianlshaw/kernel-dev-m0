@@ -4,13 +4,13 @@
 .thumb_func
 .global _start
 _start:
-stacktop: .word 0x20001000
-.word reset
+stacktop: .word 0x20001FFF
+.word main	@ reset 
 .word nmi
 .word hardfault
-.word hang	@ reserved
-.word hang	@ reserved
-.word hang	@ reserved
+.word memfault	@ reserved 
+.word busfault	@ reserved 
+.word usagefault@ reserved
 .word hang	@ reserved
 .word hang	@ reserved
 .word hang	@ reserved
@@ -29,7 +29,7 @@ reset:
     b hang
 
 .thumb_func
-hang:   b .
+hang: b .
 
 .thumb_func
 nmi:    b .

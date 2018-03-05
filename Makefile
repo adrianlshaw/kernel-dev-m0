@@ -12,21 +12,27 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 # Cortex M4/M7 no FPU: thumbv7em-none-eabi
 # Coretex M4/M7 with FPU: thumbv7em-none-eabihf
 
-AFLAGS = --warn --fatal-warnings -mcpu=cortex-m0
+AFLAGS = --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m0
 
-CFLAGS =	-mcpu=cortex-m0 \
+CFLAGS =		-mcpu=cortex-m0 \
 			-mthumb \
+			-mthumb-interwork \
 			-Wall \
-			-Werror \
 			-O2 \
 			-nostdlib \
 			-nostartfiles \
 			-ffreestanding \
-			-g 
+			-g \
+			-Itinycrypt/lib/include/
+
+LDFLAGS = -Ltinycrypt/lib
 
 IMAGE := main
 
-all : $(IMAGE).bin
+all: $(IMAGE).bin
+
+flash-microbit:
+	cp $(IMAGE).elf /media/user/MICROBIT/
 
 rust:
 	rustc main.rs --emit=obj
@@ -34,22 +40,33 @@ rust:
 clean:
 	rm -f *.bin *.o *.elf *.list 
 
-vectors.o :
+libtinycrypt.a:
+	cp config.mk ./tinycrypt/
+	cd tinycrypt && make
+
+vectors.o:
 	$(AS) $(AFLAGS) vectors.s -o vectors.o
 
-main.o : main.c
-	$(CC) $(CFLAGS) -c main.c -o main.o
+main.o: main.c
+	$(CC) $(CFLAGS) -c main.c -o main.o -Itinycrypt/lib/include/
 
-$(IMAGE).bin : memmap.ld vectors.o main.o
-	$(LD) -o $(IMAGE).elf -T memmap.ld vectors.o main.o
+$(IMAGE).bin : memmap.ld vectors.o main.o libtinycrypt.a
+	$(LD) $(LDFLAGS) -o $(IMAGE).elf -T memmap.ld vectors.o main.o tinycrypt/lib/libtinycrypt.a
 	$(OBJDUMP) -D $(IMAGE).elf > main.list
 	$(OBJCOPY) $(IMAGE).elf $(IMAGE).bin -O binary
 
 gdb: all
-	$(GDB) $(IMAGE) -x gdbfile ./$(IMAGE).elf
+	$(GDB) $(IMAGE) -x gdbfile $(IMAGE).elf
 
 qemu:
-	@qemu-system-arm -S -gdb tcp::1234 -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).bin
+	@qemu-system-arm -S -gdb tcp::1234 -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
+
+
+debug-microbit:
+	@tmux new-session -s foo 'pyocd-gdbserver --persist -t nrf51 -bh -r' \; \
+		split-window 'sleep 1 && arm-none-eabi-gdb -x gdbfile.board $(IMAGE).elf' \; \
+		select-layout even-horizontal\; \
+		select-window -t foo:0\; split-window -h 'minicom --device /ttyACM0';\
 
 docker-qemu:
 	@docker run -ti cortexm 
