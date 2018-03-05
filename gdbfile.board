@@ -1,0 +1,6 @@
+set architecture arm
+set arm fallback-mode thumb
+target remote :3333
+file main.elf
+break main
+monitor reset halt
