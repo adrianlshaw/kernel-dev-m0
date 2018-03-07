@@ -1,0 +1,10 @@
+sudo: required
+
+before_install:
+        - apt-get update && apt-get -y install make gcc-aarch64-linux-gnu qemu-system-arm gdb-multiarch tmux
+
+language: bash
+
+script:
+        timeout 10 make ci > test.run
+        grep "Success" test.run
