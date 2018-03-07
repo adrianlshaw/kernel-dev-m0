@@ -1,4 +1,4 @@
-sudo: required
+sudo: enabled
 
 before_install:
         - apt-get update && apt-get -y install make gcc-aarch64-linux-gnu qemu-system-arm gdb-multiarch tmux
