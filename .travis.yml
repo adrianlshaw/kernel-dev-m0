@@ -1,7 +1,7 @@
 sudo: enabled
 
 before_install:
-        - apt-get update && apt-get -y install make gcc-aarch64-linux-gnu qemu-system-arm gdb-multiarch tmux
+        - sudo apt-get update && sudo apt-get -y install make gcc-aarch64-linux-gnu qemu-system-arm gdb-multiarch tmux
 
 language: bash
 
