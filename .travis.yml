@@ -6,5 +6,6 @@ before_install:
 language: bash
 
 script:
-        timeout 10 make ci > test.run
+        make PLAT=qemu
+        timeout 10 make ci > test.run || true
         grep "Success" test.run
