@@ -1,4 +1,4 @@
-
+PLAT=qemu
 CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
@@ -48,6 +48,8 @@ vectors.o:
 	$(AS) $(AFLAGS) vectors.s -o vectors.o
 
 main.o: main.c
+	rm plat.h
+	ln -s $(PLAT).c plat.h 
 	$(CC) $(CFLAGS) -c main.c -o main.o -Itinycrypt/lib/include/
 
 $(IMAGE).bin : memmap.ld vectors.o main.o libtinycrypt.a
@@ -58,9 +60,11 @@ $(IMAGE).bin : memmap.ld vectors.o main.o libtinycrypt.a
 gdb: all
 	$(GDB) $(IMAGE) -x gdbfile $(IMAGE).elf
 
-qemu:
+debug-qemu:
 	@qemu-system-arm -S -gdb tcp::1234 -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
 
+ci:
+	@qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
 
 debug-microbit:
 	@tmux new-session -s foo 'pyocd-gdbserver --persist -t nrf51 -bh -r' \; \
@@ -73,6 +77,6 @@ docker-qemu:
 
 test:
 	-pkill -9 qemu-system-arm
-	@tmux new-session 'make qemu' \; \
+	@tmux new-session 'make debug-qemu' \; \
 		split-window 'sleep 1 && make gdb' \; \
 		select-layout even-horizontal

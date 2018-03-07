@@ -1,26 +1,6 @@
 #include <tinycrypt/sha256.h>
-#define UART_BASE 0x40002000 // Microbit
-//#define UART_BASE 0x4000C000 //QEMU
-
-#define DWT_CTRL	0xE0001000
-#define DWT_CYCCNT	0xE0001004
-
-#define SYSTICK_CTRL_STATUS  0xE000E010
-#define SYSTICK_RELOAD_VALUE 0xE000E014
-#define SYSTICK_COUNT_VALUE  0xE000E018
-#define SYSTICK_CALIB_VALUE  0xE000E01C
-
-#define MPU_TYPE 0xE000ED90
-
-#define CPUID 0x410CC200
-
-#define	ioread32(addr) ioread32n(addr,0)
-#define	iowrite32(addr, value) iowrite32n(addr,0,value)
-#define	ioread32n(addr, idx) ( *((volatile uint32_t*)(addr)+idx) )
-#define	iowrite32n(addr, idx, value) do { *((volatile uint32_t*)(addr)+idx) = (value); } while (0)
-
-#define BIT_MASK(a, b) (((unsigned) -1 >> (31 - (b))) & ~((1U << (a)) - 1))
-
+#include "main.h"
+#include "plat.h"
 
 uint32_t debug_watch_trace(void)
 {
@@ -58,10 +38,12 @@ void memset(void *b, int c, int len)
 int puts(const char *str)
 {
 	while (*str) {
-		*((unsigned volatile int *) UART_BASE) = *str++;
+		//*((unsigned volatile int *) UART_BASE) = *str++;
+		putc(*str++);
 	}
 	return 0;
 }
+
 void usagefault()
 {
 	puts("Usagefault!");
@@ -117,20 +99,6 @@ uint32_t mpu_exists()
 	return ioread32(MPU_TYPE);
 }
 
-void enable_timer(void)
-{
-	unsigned volatile int timer_val = ioread32(SYSTICK_CTRL_STATUS);
-	unsigned volatile int tenms = ioread32(SYSTICK_CALIB_VALUE);
-	tenms = tenms & 0x17;
-	tenms = tenms; /* get 10ms */
-	timer_val = timer_val | 0x4; /* set clock source to core */
-	timer_val = timer_val | 0x2; /* enable interrupt generation on NVIC */
-	timer_val = timer_val | 0x1; /* enable timer */
-	iowrite32(SYSTICK_RELOAD_VALUE, tenms * 500000);
-	iowrite32(SYSTICK_CTRL_STATUS, timer_val);
-}
-
-
 void print_word(uint32_t word)
 {
 	int i;
@@ -167,9 +135,22 @@ void decode_cpuid(void)
 	}
 }
 
+void flash2()
+{
+	unsigned int ra = 0;
+	#define ROW1 12
+	#define COL9 13
+	iowrite32(GPIO_DIRSET, (1 << ROW1) | (1 << COL9));
+	iowrite32(GPIO_OUTCLR, 1 << COL9); // set column to low
+	iowrite32(GPIO_OUTSET, 1 << ROW1); // set row to high
+	//while(1){}
+    	//iowrite32(GPIO_OUTCLR,1<<ROW1);
+}
+
 
 int main(void)
 {
+	flash2();
 	puts("Hello from adrianlshaw\n");
 	puts("Testing supervisor call\n");
 	__asm volatile ("SVC #15":::"memory");
@@ -197,5 +178,7 @@ int main(void)
 	}
 
 	enable_timer();
+	puts("Success\n");
 	while (1);
+
 }
