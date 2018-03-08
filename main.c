@@ -2,6 +2,16 @@
 #include "main.h"
 #include "plat.h"
 
+void reset(void)
+{
+#define SYSRESETREQ 0x2
+	uint32_t resetval = (0x05FA << 16);
+	resetval = (resetval | SYSRESETREQ);
+
+	iowrite32(0xE000ED0C, resetval); /* Write to the VECTKEY field */
+	for(;;);
+}
+
 uint32_t debug_watch_trace(void)
 {
 	return ioread32(DWT_CTRL);
@@ -14,12 +24,13 @@ inline uint32_t cycles(void)
 
 void memcpy(void *dest, void *src, size_t n)
 {
+	int i;
 	// Typecast src and dest addresses to (char *)
 	char *csrc = (char *)src;
 	char *cdest = (char *)dest;
 
 	// Copy contents of src[] to dest[]
-	for (int i=0; i<n; i++) {
+	for (i=0; i<n; i++) {
 		cdest[i] = csrc[i];
 	}
 }
@@ -135,15 +146,7 @@ void decode_cpuid(void)
 	}
 }
 
-void reset(void)
-{
-#define SYSRESETREQ 0x2
-	uint32_t resetval = (0x05FA << 16);
-	resetval = (resetval | SYSRESETREQ);
 
-	iowrite32(0xE000ED0C, resetval); /* Write to the VECTKEY field */
-	for(;;);
-}
 
 int main(void)
 {

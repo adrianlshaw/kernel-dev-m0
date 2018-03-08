@@ -1,5 +1,3 @@
-#define UART_BASE 0x40002000 // Microbit
-
 #define DWT_CTRL        0xE0001000
 #define DWT_CYCCNT      0xE0001004
 

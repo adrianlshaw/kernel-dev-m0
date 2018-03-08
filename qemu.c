@@ -1,8 +1,10 @@
+#include "main.h"
+
 #define UART_BASE 0x4000C000
 
 void putc(const char *c)
 {
-	iowrite32(UART_BASE, c);
+	iowrite32(UART_BASE, (unsigned int) c);
 }
 
 /* This will enable the in-built SysTick */
