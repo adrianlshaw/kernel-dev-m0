@@ -48,7 +48,7 @@ vectors.o:
 	$(AS) $(AFLAGS) vectors.s -o vectors.o
 
 main.o: main.c
-	rm plat.h
+	rm -f plat.h
 	ln -s $(PLAT).c plat.h 
 	$(CC) $(CFLAGS) -c main.c -o main.o -Itinycrypt/lib/include/
 
