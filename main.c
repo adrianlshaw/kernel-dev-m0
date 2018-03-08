@@ -69,7 +69,7 @@ void pendsv()
 void hardfault()
 {
 	puts("Oh fiddlesticks, a hard fault\n");
-	while (1);
+	reset();
 }
 
 void busfault()
@@ -135,22 +135,19 @@ void decode_cpuid(void)
 	}
 }
 
-void flash2()
+void reset(void)
 {
-	unsigned int ra = 0;
-	#define ROW1 12
-	#define COL9 13
-	iowrite32(GPIO_DIRSET, (1 << ROW1) | (1 << COL9));
-	iowrite32(GPIO_OUTCLR, 1 << COL9); // set column to low
-	iowrite32(GPIO_OUTSET, 1 << ROW1); // set row to high
-	//while(1){}
-    	//iowrite32(GPIO_OUTCLR,1<<ROW1);
-}
+#define SYSRESETREQ 0x2
+	uint32_t resetval = (0x05FA << 16);
+	resetval = (resetval | SYSRESETREQ);
 
+	iowrite32(0xE000ED0C, resetval); /* Write to the VECTKEY field */
+	for(;;);
+}
 
 int main(void)
 {
-	flash2();
+
 	puts("Hello from adrianlshaw\n");
 	puts("Testing supervisor call\n");
 	__asm volatile ("SVC #15":::"memory");
@@ -179,6 +176,7 @@ int main(void)
 
 	enable_timer();
 	puts("Success\n");
+	reset();
 	while (1);
 
 }

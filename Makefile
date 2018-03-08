@@ -34,7 +34,7 @@ all: $(IMAGE).bin
 flash-microbit:
 	cp $(IMAGE).elf /media/user/MICROBIT/
 
-rust:
+rust: vectors.o
 	rustc main.rs --emit=obj
 
 clean:
