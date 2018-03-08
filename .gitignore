@@ -1,0 +1,10 @@
+*.o
+*.bin
+*.list
+*.backup
+*.out
+*.elf
+*.swp
+*.gdb_history
+test.run
+plat.h
