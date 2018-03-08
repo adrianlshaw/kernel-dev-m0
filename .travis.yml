@@ -8,4 +8,5 @@ language: bash
 script:
         make PLAT=qemu
         timeout 10 make ci > test.run || true
+        cat test.run
         grep "Success" test.run
