@@ -45,8 +45,9 @@ libtinycrypt.a:
 	cp config.mk ./tinycrypt/
 	cd tinycrypt && make
 
+.PHONY: math
 math:
-	cd math && arm-none-eabi-as  --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m0 *
+	$(AS) $(AFLAGS) math/*.S -o math/math.a
 
 vectors.o:
 	$(AS) $(AFLAGS) vectors.s -o vectors.o
@@ -57,8 +58,8 @@ main.o: main.c
 	ln -s $(PLAT).c plat.h 
 	$(CC) $(CFLAGS) -c main.c -o main.o -Itinycrypt/lib/include/
 
-$(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a
-	$(LD) $(LDFLAGS) -o $(IMAGE).elf -T memmap.ld vectors.o main.o tinycrypt/lib/libtinycrypt.a math/a.out
+$(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a math
+	$(LD) $(LDFLAGS) -o $(IMAGE).elf -T memmap.ld vectors.o main.o tinycrypt/lib/libtinycrypt.a math/math.a
 	$(OBJDUMP) -D $(IMAGE).elf > main.list
 	$(OBJCOPY) $(IMAGE).elf $(IMAGE).bin -O binary
 
