@@ -1,5 +1,5 @@
 #include <tinycrypt/sha256.h>
-#include "tinyprintf.c"
+#include "tinyprintf/tinyprintf.c"
 #include "main.h"
 #include "plat.h"
 
