@@ -1,3 +1,6 @@
 [submodule "tinycrypt"]
 	path = tinycrypt
 	url = https://github.com/01org/tinycrypt.git
+[submodule "tinyprintf"]
+	path = tinyprintf
+	url = https://github.com/cjlano/tinyprintf.git

@@ -23,9 +23,10 @@ CFLAGS =		-mcpu=cortex-m0 \
 			-nostartfiles \
 			-ffreestanding \
 			-g \
-			-Itinycrypt/lib/include/
+			-Itinycrypt/lib/include/ \
+			-Imath/
 
-LDFLAGS = -Ltinycrypt/lib
+LDFLAGS = -Ltinycrypt/lib -Lmath
 
 IMAGE := main
 
@@ -44,16 +45,20 @@ libtinycrypt.a:
 	cp config.mk ./tinycrypt/
 	cd tinycrypt && make
 
+math:
+	cd math && arm-none-eabi-as  --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m0 *
+
 vectors.o:
 	$(AS) $(AFLAGS) vectors.s -o vectors.o
+
 
 main.o: main.c
 	rm -f plat.h
 	ln -s $(PLAT).c plat.h 
 	$(CC) $(CFLAGS) -c main.c -o main.o -Itinycrypt/lib/include/
 
-$(IMAGE).bin : memmap.ld vectors.o main.o libtinycrypt.a
-	$(LD) $(LDFLAGS) -o $(IMAGE).elf -T memmap.ld vectors.o main.o tinycrypt/lib/libtinycrypt.a
+$(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a
+	$(LD) $(LDFLAGS) -o $(IMAGE).elf -T memmap.ld vectors.o main.o tinycrypt/lib/libtinycrypt.a math/a.out
 	$(OBJDUMP) -D $(IMAGE).elf > main.list
 	$(OBJCOPY) $(IMAGE).elf $(IMAGE).bin -O binary
 

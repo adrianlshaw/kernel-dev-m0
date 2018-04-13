@@ -1,4 +1,5 @@
 #include <tinycrypt/sha256.h>
+#include "tinyprintf.c"
 #include "main.h"
 #include "plat.h"
 
@@ -150,7 +151,6 @@ void decode_cpuid(void)
 
 int main(void)
 {
-
 	puts("Hello from adrianlshaw\n");
 	puts("Testing supervisor call\n");
 	__asm volatile ("SVC #15":::"memory");
