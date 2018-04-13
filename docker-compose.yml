@@ -1,6 +1,7 @@
 version: '2'
 services:
  cortexm:
+  build: .
   cap_add: 
     - SYS_PTRACE
   stdin_open: true
