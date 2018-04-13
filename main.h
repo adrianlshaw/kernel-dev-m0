@@ -15,7 +15,7 @@
 
 #define CPUID 0x410CC200
 
-#define get(V) ({uint64_t _val_;__asm__ volatile ("MRS %0, " #V "" :"=r"(_val_)::"memory");_val_;})
+#define get(V) ({uint32_t _val_;__asm__ volatile ("MRS %0, " #V "" :"=r"(_val_)::"memory");_val_;})
 
 #define ioread32(addr) ioread32n(addr,0)
 #define iowrite32(addr, value) iowrite32n(addr,0,value)

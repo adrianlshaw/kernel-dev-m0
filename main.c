@@ -58,12 +58,12 @@ int puts(const char *str)
 
 void printregs()
 {
-	tfp_printf("APSR: 0x%lx\n", get(APSR));
-	tfp_printf("IPSR: 0x%lx\n", get(IPSR));
-	tfp_printf("EPSR: 0x%lx\n", get(EPSR));
-	tfp_printf("PSP: 0x%lx\n", get(PSP));
-	tfp_printf("PRIMASK: 0x%lx\n", get(PRIMASK));
-	tfp_printf("CONTROL: 0x%lx\n", get(CONTROL));
+	tfp_printf("APSR: 0x%lx\r\n", get(APSR));
+	tfp_printf("IPSR: 0x%lx\r\n", get(IPSR));
+	tfp_printf("EPSR: 0x%lx\r\n", get(EPSR));
+	tfp_printf("PSP: 0x%lx\r\n", get(PSP));
+	tfp_printf("PRIMASK: 0x%lx\r\n", get(PRIMASK));
+	tfp_printf("CONTROL: 0x%lx\r\n", get(CONTROL));
 }
 
 void usagefault()
@@ -74,37 +74,37 @@ void usagefault()
 
 void memfault()
 {
-	puts("\nMemfault!");
+	puts("\r\nMemfault!");
 	printregs();
 	while(1);
 }
 
 void systick()
 {
-	puts("\nSystick!");
+	puts("\r\nSystick!");
 }
 
 void pendsv()
 {
-	puts("\nPendSV!");
+	puts("\r\nPendSV!");
 }
 
 void hardfault()
 {
-	puts("Oh fiddlesticks, a hard fault\n");
+	puts("Oh fiddlesticks, a hard fault\r\n");
 	printregs();
 	reset();
 }
 
 void busfault()
 {
-	puts("Bus fault!\n");
+	puts("Bus fault!\r\n");
 	while(1);
 }
 
 void svc()
 {
-	puts("\nSVC!\n");
+	puts("\r\nSVC!\r\n");
 }
 
 void sha()
@@ -142,20 +142,20 @@ void decode_cpuid(void)
 	uint32_t cpuid = ioread32(CPUID);
 
 	print_word(cpuid);
-	puts("\n");
+	puts("\r\n");
 	print_word(1);
-	puts("\n");
+	puts("\r\n");
 	print_word(2);
-	puts("\n");
+	puts("\r\n");
 	print_word(3);
-	puts("\n");
+	puts("\r\n");
 
 	if ((cpuid >> 24) & 0x41) {
-		puts("ARM!\n");
+		puts("ARM!\r\n");
 	}
 
 	if ((cpuid & BIT_MASK(24,31))) {
-		puts("ARM!\n");
+		puts("ARM!\r\n");
 	}
 }
 
@@ -163,35 +163,35 @@ void decode_cpuid(void)
 
 int main(void)
 {
+	uart_init();
 	init_printf(NULL,putc);
-	puts("Hello from adrianlshaw\n");
-	puts("Testing supervisor call\n");
+	puts("Hello from adrianlshaw\r\n");
+	puts("Testing supervisor call\r\n");
 	__asm volatile ("SVC #15":::"memory");
-	puts("Done\n");
+	puts("Done\r\n");
 
 	if (debug_watch_trace()){
-		puts("Measuring cycles to perform SHA256\n");
+		puts("Measuring cycles to perform SHA256\r\n");
 		uint32_t cycle1 = cycles();
 		sha();
 		uint32_t cycle2 = cycles();
 		uint32_t measurement = cycle2 - cycle1;
-		puts("Cycles = ");
-		//itoa(measurement);
-		puts("\n");
+		tfp_printf("Cycles = %ld\n", measurement);
+		puts("\r\n");
 	}
 	else {
-		puts("Not measuring\n");
+		puts("Not measuring\r\n");
 	}
 
 	if (mpu_exists()) {
-		puts("MPU exists!\n");
+		puts("MPU exists!\r\n");
 	}
 	else {
-		puts ("No MPU\n");
+		puts ("No MPU\r\n");
 	}
 
 	enable_timer();
-	puts("Success\n");
+	puts("Success\r\n");
 	printregs();
 	reset();
 	while (1);

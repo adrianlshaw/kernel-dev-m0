@@ -17,6 +17,7 @@ AFLAGS = --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m0
 CFLAGS =		-mcpu=cortex-m0 \
 			-mthumb \
 			-mthumb-interwork \
+			-Werror \
 			-Wall \
 			-O2 \
 			-nostdlib \
@@ -66,23 +67,27 @@ $(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a math
 gdb: all
 	$(GDB) $(IMAGE) -x gdbfile $(IMAGE).elf
 
-debug-qemu:
+qemu:
 	@qemu-system-arm -S -gdb tcp::1234 -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
 
 ci:
 	@qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
 
-debug-microbit:
-	@tmux new-session -s foo 'pyocd-gdbserver --persist -t nrf51 -bh -r' \; \
-		split-window 'sleep 1 && arm-none-eabi-gdb -x gdbfile.board $(IMAGE).elf' \; \
-		select-layout even-horizontal\; \
-		select-window -t foo:0\; split-window -h 'minicom --device /ttyACM0';\
-
 docker-qemu:
 	@docker run -ti cortexm 
 
-test:
+debug-qemu:
 	-pkill -9 qemu-system-arm
-	@tmux new-session 'make debug-qemu' \; \
+	@tmux new-session 'make qemu' \; \
 		split-window 'sleep 1 && make gdb' \; \
 		select-layout even-horizontal
+
+debug-microbit:
+	tmux new-session -d -s foo 'pyocd-gdbserver --persist -t nrf51 -bh -r'
+	tmux send-keys 'bundle exec thin start' 'C-m'
+	tmux rename-window 'Foo'
+	tmux select-window -t foo:0
+	tmux split-window -h 'sleep 1 && arm-none-eabi-gdb -x gdbfile.board $(IMAGE).elf'
+	tmux split-window -v -t 0 'minicom --device=/dev/ttyACM0'
+	tmux -2 attach-session -t foo
+	tmux select-window -t foo:0

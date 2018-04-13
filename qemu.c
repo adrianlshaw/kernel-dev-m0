@@ -2,9 +2,14 @@
 
 #define UART_BASE 0x4000C000
 
-void putc(void *p, const char *c)
+void putc(void *p, const char c)
 {
 	iowrite32(UART_BASE, (unsigned int) c);
+}
+
+void uart_init() 
+{
+
 }
 
 /* This will enable the in-built SysTick */

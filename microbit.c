@@ -16,7 +16,7 @@
 
 static int initialised = 0;
 
-static void uart_init (void)
+void uart_init()
 {
 	iowrite32(GPIO_DIRSET,1<<24);
 	iowrite32(UART_BAUDRATE,0x01D7E000); //115200
@@ -29,17 +29,17 @@ static void uart_init (void)
 void putc(void *p, const char c)
 {
 	if (!initialised) {
-		uart_init();	
+		uart_init();
 	}
 
-	iowrite32(UART_TXDRDY,0);
+	//iowrite32(UART_TXDRDY,0);
 	iowrite32(UART_TXD,(unsigned int) c);
 
 	while(ioread32(UART_TXDRDY) == 0) {
 		continue;
 	}
 
-	iowrite32(UART_TXDRDY,0);
+	iowrite32(UART_TXDRDY,0x00);
 }
 
 /* Will send interrupts to */
@@ -66,4 +66,5 @@ void enable_timer()
 	iowrite32(TIMER_REGISTER0, 101);
 
 	iowrite32(TIMER_BASE, 0xF);
+	tfp_printf("TIMER_REGISTER0 %lx", ioread32(TIMER_REGISTER0));
 }
