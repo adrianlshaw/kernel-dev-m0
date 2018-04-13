@@ -5,7 +5,7 @@
 
 void reset(void)
 {
-#define SYSRESETREQ 0x2
+#define SYSRESETREQ 0x4
 	uint32_t resetval = (0x05FA << 16);
 	resetval = (resetval | SYSRESETREQ);
 
