@@ -51,9 +51,19 @@ int puts(const char *str)
 {
 	while (*str) {
 		//*((unsigned volatile int *) UART_BASE) = *str++;
-		putc(*str++);
+		putc(NULL, *str++);
 	}
 	return 0;
+}
+
+void printregs()
+{
+	tfp_printf("APSR: 0x%lx\n", get(APSR));
+	tfp_printf("IPSR: 0x%lx\n", get(IPSR));
+	tfp_printf("EPSR: 0x%lx\n", get(EPSR));
+	tfp_printf("PSP: 0x%lx\n", get(PSP));
+	tfp_printf("PRIMASK: 0x%lx\n", get(PRIMASK));
+	tfp_printf("CONTROL: 0x%lx\n", get(CONTROL));
 }
 
 void usagefault()
@@ -65,6 +75,7 @@ void usagefault()
 void memfault()
 {
 	puts("\nMemfault!");
+	printregs();
 	while(1);
 }
 
@@ -81,6 +92,7 @@ void pendsv()
 void hardfault()
 {
 	puts("Oh fiddlesticks, a hard fault\n");
+	printregs();
 	reset();
 }
 
@@ -151,6 +163,7 @@ void decode_cpuid(void)
 
 int main(void)
 {
+	init_printf(NULL,putc);
 	puts("Hello from adrianlshaw\n");
 	puts("Testing supervisor call\n");
 	__asm volatile ("SVC #15":::"memory");
@@ -179,6 +192,7 @@ int main(void)
 
 	enable_timer();
 	puts("Success\n");
+	printregs();
 	reset();
 	while (1);
 

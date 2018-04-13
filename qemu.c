@@ -2,7 +2,7 @@
 
 #define UART_BASE 0x4000C000
 
-void putc(const char *c)
+void putc(void *p, const char *c)
 {
 	iowrite32(UART_BASE, (unsigned int) c);
 }

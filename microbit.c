@@ -26,7 +26,7 @@ static void uart_init (void)
 	initialised = 1;
 }
 
-void putc(char c)
+void putc(void *p, const char c)
 {
 	if (!initialised) {
 		uart_init();	
