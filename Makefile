@@ -70,6 +70,9 @@ gdb: all
 qemu:
 	@qemu-system-arm -S -gdb tcp::1234 -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
 
+test: ci
+	echo "Done"
+
 ci:
 	@qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
 
