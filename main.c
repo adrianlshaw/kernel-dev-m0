@@ -253,4 +253,5 @@ int main(void)
 	start_task(current_task);
 	/* Should not reach here */
 	panic();
+	while(1);
 }
