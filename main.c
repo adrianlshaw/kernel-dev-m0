@@ -2,6 +2,9 @@
 #include "tinyprintf/tinyprintf.c"
 #include "main.h"
 #include "plat.h"
+#include "task.h"
+
+void printregs(void);
 
 void reset(void)
 {
@@ -56,15 +59,6 @@ int puts(const char *str)
 	return 0;
 }
 
-void printregs()
-{
-	tfp_printf("APSR: 0x%lx\r\n", get(APSR));
-	tfp_printf("IPSR: 0x%lx\r\n", get(IPSR));
-	tfp_printf("EPSR: 0x%lx\r\n", get(EPSR));
-	tfp_printf("PSP: 0x%lx\r\n", get(PSP));
-	tfp_printf("PRIMASK: 0x%lx\r\n", get(PRIMASK));
-	tfp_printf("CONTROL: 0x%lx\r\n", get(CONTROL));
-}
 
 void usagefault()
 {
@@ -81,7 +75,7 @@ void memfault()
 
 void systick()
 {
-	puts("\r\nSystick!");
+	puts("\r\nSystick!\r\n");
 }
 
 void pendsv()
@@ -89,22 +83,87 @@ void pendsv()
 	puts("\r\nPendSV!");
 }
 
-void hardfault()
+void hardfault(void)
 {
 	puts("Oh fiddlesticks, a hard fault\r\n");
 	printregs();
+}
+
+void __attribute__((naked)) task_test() {
+	puts ("Task started\n");
+	init_printf(NULL,putc);
+	while(1) { 
+		asm volatile ("wfi\nisb\n");
+		puts ("And I'm back\n");
+		tfp_printf("Priv level = %lu\n", get(CONTROL));
+	}
+}
+
+static task_t current_task;
+
+void start_task(task_t task) {
+	memcpy(&current_task, 0, sizeof(task_t));
+	current_task.entry_point = task_test;
+	
+	asm volatile (
+	"mov r0, %0\n" /* Entry point */
+	"mov r1, %1\n" /* Process Stack Pointer */
+	"msr psp, r1\n" /* Set process stack */
+	"mov r2, #0x3\n" /* 0x3 is unprivileged mode and use PSP */
+	"msr control, r2\n" /* Enable */
+	"isb\n" /* Really enable */
+	"mov pc, r0\n"
+	:: "r" (task.entry_point), "r" (task.sp)
+	);
+}
+
+static uint32_t panic_regs[16] = { 0 };
+
+void __attribute__((naked)) panic(void) 
+{
+	asm volatile (
+	"mov r0, %[pregs]\n"
+	"stmia r0!, {r1-r7}\n"
+	"mov r1, r8\n"
+	"mov r2, r9\n"
+	"mov r3, r10\n"
+	"mov r4, r11\n"
+	"mov r5, r12\n"
+	"mov r6, lr\n"
+	"stmia r0!, {r1-r6}\n"
+	"bl printregs\n"
+	:: [pregs] "r" (panic_regs)
+	);
+}	
+
+void printregs(void)
+{
+	int i;
+	/* Print general regs */
+	for (i=0; i<12; i++) {
+		tfp_printf("r%d: 0x%lx\r\n", i+1, panic_regs[i]);
+	}
+	tfp_printf("LR: 0x%lx\r\n", panic_regs[12]);
+
+	tfp_printf("APSR: 0x%lx\r\n", get(APSR));
+	tfp_printf("IPSR: 0x%lx\r\n", get(IPSR));
+	tfp_printf("EPSR: 0x%lx\r\n", get(EPSR));
+	tfp_printf("PSP: 0x%lx\r\n", get(PSP));
+	tfp_printf("PRIMASK: 0x%lx\r\n", get(PRIMASK));
+	tfp_printf("CONTROL: 0x%lx\r\n", get(CONTROL));
 	reset();
 }
 
 void busfault()
 {
 	puts("Bus fault!\r\n");
+	panic();
 	while(1);
 }
 
 void svc()
 {
-	puts("\r\nSVC!\r\n");
+	puts("\r\nSVC handled!\r\n");
 }
 
 void sha()
@@ -136,7 +195,6 @@ void print_word(uint32_t word)
 	}
 }
 
-
 void decode_cpuid(void)
 {
 	uint32_t cpuid = ioread32(CPUID);
@@ -159,13 +217,12 @@ void decode_cpuid(void)
 	}
 }
 
-
-
 int main(void)
 {
 	uart_init();
 	init_printf(NULL,putc);
 	puts("Hello from adrianlshaw\r\n");
+	tfp_printf("Priv level = %lu\n", get(CONTROL));
 	puts("Testing supervisor call\r\n");
 	__asm volatile ("SVC #15":::"memory");
 	puts("Done\r\n");
@@ -192,8 +249,8 @@ int main(void)
 
 	enable_timer();
 	puts("Success\r\n");
-	printregs();
-	reset();
-	while (1);
-
+	current_task.sp = 0x20001FFF - 1000;
+	start_task(current_task);
+	/* Should not reach here */
+	panic();
 }
