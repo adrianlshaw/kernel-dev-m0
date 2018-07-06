@@ -20,7 +20,7 @@ CFLAGS =		-mcpu=cortex-m0 \
 			-mthumb-interwork \
 			-Werror \
 			-Wall \
-			-O2 \
+			-O0 \
 			-nostdlib \
 			-nostartfiles \
 			-ffreestanding \
