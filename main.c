@@ -4,6 +4,7 @@
 #include "plat.h"
 #include "task.h"
 
+void __attribute__((naked)) panic(void);
 void printregs(void);
 
 void reset(void)
@@ -73,14 +74,58 @@ void memfault()
 	while(1);
 }
 
+static task_t current_task; // Must use static for it to automatically appear in .data section
+static task_t *next_task;
+
 void systick()
 {
 	puts("\r\nSystick!\r\n");
+	next_task = &current_task;
+	// Set PENDSVSET bit in the NVIC ICSR register
+	*((uint32_t volatile *)0xE000ED04) = 0x10000000;
 }
 
-void pendsv()
+/* NVIC automatically saves R0-R3, R12, LR, PC, XPSR on a new frame atop the PSP */
+/* The rest have to be done in software */
+void __attribute__((naked)) pendsv(void)
 {
-	puts("\r\nPendSV!");
+	puts("\r\nPendSV!"); // Remove?
+
+	/* Save rest of registers to the stack */
+	asm volatile (
+	"cpsid i\n"
+	"ldr r1,%[CURRENTSP]\n" // load current TCB into R1
+	"mrs r0, psp\n" // Get stack pointer
+	"str r0, [r1]\n" // store stack pointer in TCB
+	"sub r0, r0, #32\n" // 32 not possible in thumb-16 mode 
+	"mov r1, r4\n" // Shift r4-r10 into r1-r7 so we can put these on the stack
+	"mov r2, r5\n"
+	"mov r3, r6\n"
+	"mov r4, r7\n"
+	"mov r5, r8\n"
+	"mov r6, r9\n"
+	"mov r7, r10\n"
+	"stmia r0!, {r1-r7}\n" // can only store to memory from lower registers
+	"ldr r4, [%[NEXTSP]]\n" // Get stack pointer of new task
+	"mov r0, r4\n"
+	"isb\n"
+	"msr psp, r4\n" // Load stack pointer of new task
+	"sub r0, r0, #32\n" // Should this be 16?
+	"ldmia r0!, {r1-r7}\n" // get saved register values 
+	"mov r10, r7\n" // shift registers back
+	"mov r9, r6\n"
+	"mov r8, r5\n"
+	"mov r7, r4\n"
+	"mov r6, r3\n"
+	"mov r5, r2\n"
+	"mov r4, r1\n"
+	"ldr r0, =0xfffffffd\n" // Exception return to unpriv thread mode
+	"isb\n"
+	"cpsie i\n"
+	"bx r0\n" // make it so
+	:: [CURRENTSP] "r" (current_task.sp), [NEXTSP] "r" (next_task->sp)
+	);
+	// 16 registers altogether are saved on stack (8 bw HW, 8 by SW) 
 }
 
 void hardfault(void)
@@ -96,10 +141,10 @@ void __attribute__((naked)) task_test() {
 		asm volatile ("wfi\nisb\n");
 		puts ("And I'm back\n");
 		tfp_printf("Priv level = %lu\n", get(CONTROL));
+		__asm volatile ("SVC #0":::"memory");
 	}
 }
 
-static task_t current_task;
 
 void start_task(task_t task) {
 	memcpy(&current_task, 0, sizeof(task_t));
@@ -223,10 +268,8 @@ int main(void)
 	init_printf(NULL,putc);
 	puts("Hello from adrianlshaw\r\n");
 	tfp_printf("Priv level = %lu\n", get(CONTROL));
-	puts("Testing supervisor call\r\n");
-	__asm volatile ("SVC #15":::"memory");
-	puts("Done\r\n");
-
+	//__asm volatile ("SVC #15":::"memory");
+#if 0
 	if (debug_watch_trace()){
 		puts("Measuring cycles to perform SHA256\r\n");
 		uint32_t cycle1 = cycles();
@@ -239,7 +282,7 @@ int main(void)
 	else {
 		puts("Not measuring\r\n");
 	}
-
+#endif
 	if (mpu_exists()) {
 		puts("MPU exists!\r\n");
 	}
