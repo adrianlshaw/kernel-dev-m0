@@ -75,8 +75,13 @@ qemu:
 qemu-gdb:
 	$(QFLAGS) $(IMAGE).elf -S -gdb tcp::1234
 
-ci:
-	$(QFLAGS) $(IMAGE).elf
+ci: all
+	timeout 10 $(QFLAGS) $(IMAGE).elf > /tmp/output || true
+	cat /tmp/output
+
+docker-ci:
+	cp -r * /tmp
+	cd /tmp && timeout 10 make ci || true
 
 docker-qemu:
 	@docker run -ti cortexm 
