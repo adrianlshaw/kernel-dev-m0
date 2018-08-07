@@ -4,6 +4,7 @@ CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
 LD = $(CROSS_COMPILE)ld
+AR = $(CROSS_COMPILE)ar
 GDB = $(CROSS_COMPILE)gdb
 OBJDUMP = $(CROSS_COMPILE)objdump
 OBJCOPY = $(CROSS_COMPILE)objcopy
@@ -46,7 +47,7 @@ clean:
 
 libtinycrypt.a:
 	cp config.mk ./tinycrypt/
-	cd tinycrypt && make
+	cd tinycrypt && AR=$(AR) make
 
 .PHONY: math
 math:
