@@ -13,7 +13,7 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 # Cortex M4/M7 no FPU: thumbv7em-none-eabi
 # Coretex M4/M7 with FPU: thumbv7em-none-eabihf
 
-AFLAGS = --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m0
+AFLAGS = --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m3
 
 CFLAGS =		-mcpu=cortex-m0 \
 			-mthumb \
