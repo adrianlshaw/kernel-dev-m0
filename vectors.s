@@ -45,9 +45,10 @@ ldr r1, [r2]
 str r0, [r1]
 
 /* Next task */
-ldr r2, =current_task
+ldr r2, =next_task
 ldr r1, [r2]
 ldr r0, [r1]
+ldr r0, [r0]
 
 /* Restore regs */
 /*adds r0, #4/* my stuff */
