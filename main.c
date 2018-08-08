@@ -2,8 +2,7 @@
 #include "tinyprintf/tinyprintf.c"
 #include "main.h"
 #include "plat.h"
-
-#define task_t uint32_t
+#include "task.h"
 
 void __attribute__((naked)) panic(void);
 void printregs(void);
@@ -102,7 +101,7 @@ void __attribute__((naked)) task_test() {
 }
 
 
-void start_task(task_t task) {
+void start_task(task_t *task) {
 	asm volatile (
 	"mov r0, %0\n" /* Entry point */
 	"mov r1, %1\n" /* Process Stack Pointer */
@@ -111,7 +110,7 @@ void start_task(task_t task) {
 	"msr control, r2\n" /* Enable */
 	"isb\n" /* Really enable */
 	"mov pc, r0\n"
-	:: "r" (task_test), "r" (task)
+	:: "r" (task_test), "r" (task->sp)
 	);
 }
 
@@ -244,8 +243,8 @@ int main(void)
 
 	enable_timer();
 	puts("Success\r\n");
-	current_task = 0x20001FFF - 1000;
-	start_task(current_task);
+	current_task.sp = 0x20001FFF - 1000;
+	start_task(&current_task);
 	/* Should not reach here */
 	panic();
 	while(1);
