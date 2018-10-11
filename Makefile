@@ -96,3 +96,7 @@ debug-microbit:
 	tmux split-window -v -t 0 'minicom --device=/dev/ttyACM0'
 	tmux -2 attach-session -t foo
 	tmux select-window -t foo:0
+
+help:
+	@echo "make PLAT=<platform>\n"
+	@echo "Platform list: qemu microbit mps2-an505"
