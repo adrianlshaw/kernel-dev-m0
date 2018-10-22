@@ -1,4 +1,5 @@
 PLAT=qemu
+QFLAGS=qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel
 CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
@@ -33,6 +34,7 @@ LDFLAGS = -Ltinycrypt/lib -Lmath
 IMAGE := main
 
 all: $(IMAGE).bin
+	arm-none-eabi-readelf -S main.elf
 
 flash-microbit:
 	cp $(IMAGE).elf /media/user/MICROBIT/
@@ -69,20 +71,23 @@ gdb: all
 	$(GDB) $(IMAGE) -x gdbfile $(IMAGE).elf
 
 qemu:
-	@qemu-system-arm -S -gdb tcp::1234 -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
+	$(QFLAGS) $(IMAGE).elf
+
+qemu-gdb:
+	$(QFLAGS) $(IMAGE).elf -S -gdb tcp::1234
 
 test: ci
 	echo "Done"
 
 ci:
-	@qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel $(IMAGE).elf
+	$(QFLAGS) $(IMAGE).elf
 
 docker-qemu:
 	@docker run -ti cortexm 
 
 debug-qemu:
 	-pkill -9 qemu-system-arm
-	@tmux new-session 'make qemu' \; \
+	@tmux new-session 'make qemu-gdb' \; \
 		split-window 'sleep 1 && make gdb' \; \
 		select-layout even-horizontal
 
