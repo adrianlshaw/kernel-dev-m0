@@ -2,6 +2,7 @@
 #include "tinyprintf/tinyprintf.c"
 #include "main.h"
 #include "plat.h"
+#include "mpu.c"
 #include "task.h"
 
 void printregs(void);
@@ -177,11 +178,6 @@ void sha()
 	tc_sha256_final(digest, &s);
 }
 
-uint32_t mpu_exists()
-{
-	return ioread32(MPU_TYPE);
-}
-
 void print_word(uint32_t word)
 {
 	int i;
@@ -242,6 +238,7 @@ int main(void)
 
 	if (mpu_exists()) {
 		puts("MPU exists!\r\n");
+		tfp_printf("Supports %lu regions\n", number_of_regions());
 	}
 	else {
 		puts ("No MPU\r\n");
