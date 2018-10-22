@@ -79,7 +79,8 @@ ci:
 	$(QFLAGS) $(IMAGE).elf
 
 docker-qemu:
-	@docker run -ti cortexm 
+	@docker build -t cortexm .
+	@docker run --rm -ti cortexm 
 
 debug-qemu:
 	-pkill -9 qemu-system-arm
