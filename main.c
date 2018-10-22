@@ -6,7 +6,6 @@
 #include "task.h"
 
 void printregs(void);
->>>>>>> master
 
 void reset(void)
 {
