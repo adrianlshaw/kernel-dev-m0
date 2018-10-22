@@ -58,7 +58,7 @@ vectors.o:
 
 main.o: main.c
 	rm -f plat.h
-	ln -s $(PLAT).c plat.h 
+	ln -s boards/$(PLAT).c plat.h 
 	$(CC) $(CFLAGS) -c main.c -o main.o -Itinycrypt/lib/include/
 
 $(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a math
