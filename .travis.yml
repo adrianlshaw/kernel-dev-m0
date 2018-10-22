@@ -7,6 +7,6 @@ language: bash
 
 script:
         - make PLAT=qemu
-        - timeout 10 make ci > test.run || true
+        - timeout --foreground 5 qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel main.elf > test.run
         - cat test.run
         - grep "Success" test.run
