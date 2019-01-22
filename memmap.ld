@@ -1,8 +1,8 @@
 
 MEMORY
 {
-    rom : ORIGIN = 0x00000000, LENGTH = 0x1FFF 
-    ram : ORIGIN = 0x20000000, LENGTH = 0x1FFF 
+    rom : ORIGIN = 0x10000000, LENGTH = 512K
+    ram : ORIGIN = 0x20000000, LENGTH = 512K
 }
 
 SECTIONS
@@ -10,4 +10,5 @@ SECTIONS
     .text : { *(.text*) } > rom
     .rodata : { *(.rodata*) } > rom
     .bss : { *(.bss*) } > ram
+    __StackTop = ORIGIN(rom) + LENGTH(rom);
 }

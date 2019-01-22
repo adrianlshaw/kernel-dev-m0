@@ -4,7 +4,7 @@
 .thumb_func
 .global _start
 _start:
-stacktop: .word 0x20001FFF
+stacktop: .word __StackTop 
 .word main	@ reset 
 .word nmi
 .word hardfault
