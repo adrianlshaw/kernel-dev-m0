@@ -1,5 +1,5 @@
 PLAT=qemu
-QFLAGS=qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel
+QFLAGS=qemu-system-arm -d guest_errors -machine lm3s811evb -m 8K -nographic -kernel
 CROSS_COMPILE = arm-none-eabi-
 CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
@@ -12,10 +12,10 @@ OBJCOPY = $(CROSS_COMPILE)objcopy
 # Cortex M3: thumbv7m-none-eabi
 # Cortex M4/M7 no FPU: thumbv7em-none-eabi
 # Coretex M4/M7 with FPU: thumbv7em-none-eabihf
+CPU = m33
+AFLAGS = --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-$(CPU)
 
-AFLAGS = --warn --fatal-warnings -mthumb-interwork -mcpu=cortex-m0
-
-CFLAGS =		-mcpu=cortex-m0 \
+CFLAGS =		-mcpu=cortex-$(CPU) \
 			-mthumb \
 			-mthumb-interwork \
 			-Werror \
@@ -48,7 +48,7 @@ libtinycrypt.a:
 	cp config.mk ./tinycrypt/
 	cd tinycrypt && make
 
-.PHONY: math
+.PHONY: qemu math debug-microbit flash-microbit all help clean
 math:
 	$(AS) $(AFLAGS) math/*.S -o math/math.a
 
@@ -66,11 +66,14 @@ $(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a math
 	$(OBJDUMP) -D $(IMAGE).elf > main.list
 	$(OBJCOPY) $(IMAGE).elf $(IMAGE).bin -O binary
 
-gdb: all
+gdb:
 	$(GDB) $(IMAGE) -x gdbfile $(IMAGE).elf
 
 qemu:
 	$(QFLAGS) $(IMAGE).elf
+
+qemu-mps2:
+	qemu-system-arm -S -gdb tcp::1234 -machine mps2-an505 -cpu cortex-$(CPU) -m 4096 -nographic -kernel $(IMAGE).elf
 
 qemu-gdb:
 	$(QFLAGS) $(IMAGE).elf -S -gdb tcp::1234
@@ -99,4 +102,4 @@ debug-microbit:
 
 help:
 	@echo "make PLAT=<platform>\n"
-	@echo "Platform list: qemu microbit mps2-an505"
+	@echo "Platform list: qemu microbit mps2"
