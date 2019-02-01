@@ -48,7 +48,7 @@ str r0, [r1]
 ldr r2, =next_task
 ldr r1, [r2]
 ldr r0, [r1]
-ldr r0, [r0]
+/*ldr r0, [r0] /*problematic jelly */
 
 /* Restore regs */
 /*adds r0, #4/* my stuff */

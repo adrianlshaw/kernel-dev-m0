@@ -29,7 +29,7 @@ uint32_t cycles(void)
 
 void memcpy(void *dest, void *src, size_t n)
 {
-	int i;
+	size_t i;
 	char *csrc = (char *)src;
 	char *cdest = (char *)dest;
 
@@ -53,7 +53,7 @@ int puts(const char *str)
 {
 	while (*str) {
 		//*((unsigned volatile int *) UART_BASE) = *str++;
-		putc(NULL, *str++);
+		putc(*str++);
 	}
 	return 0;
 }
@@ -72,13 +72,14 @@ void memfault()
 	while(1);
 }
 
-task_t current_task; // Must use static for it to automatically appear in .data section
+static task_t tasks[2];
+task_t *current_task = &tasks[0]; // Must use static for it to automatically appear in .data section
 task_t *next_task = NULL;
 
 void systick()
 {
 	puts("\r\nSystick!\r\n");
-	next_task = &current_task;
+	next_task = current_task;
 	// Set PENDSVSET bit in the NVIC ICSR register
 	*((uint32_t volatile *)0xE000ED04) = 0x10000000;
 }
@@ -91,12 +92,12 @@ void hardfault(void)
 
 void __attribute__((naked)) task_test() {
 	puts ("Task started\n");
-	init_printf(NULL,putc);
+	init_printf(NULL,(void *) putc);
 	while(1) { 
-		puts ("And I'm back\n");
 		tfp_printf("Priv level = %lu\n", get(CONTROL));
 		asm volatile ("SVC #0":::"memory");
 		asm volatile ("wfi");
+		puts ("And I'm back\n");
 	}
 }
 
@@ -219,7 +220,7 @@ void decode_cpuid(void)
 int main(void)
 {
 	uart_init();
-	init_printf(NULL,putc);
+	init_printf( NULL,  (void *) putc);
 	puts("Hello from adrianlshaw\r\n");
 	tfp_printf("Priv level = %lu\n", get(CONTROL));
 	if (debug_watch_trace()){
@@ -243,8 +244,11 @@ int main(void)
 
 	enable_timer();
 	puts("Success\r\n");
-	current_task.sp = 0x20001FFF - 1000;
-	start_task(&current_task);
+
+	/* Task creation */
+	current_task->sp = 0x20001FFF - 1000;
+	start_task(current_task);
+
 	/* Should not reach here */
 	panic();
 	while(1);
