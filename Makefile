@@ -20,6 +20,8 @@ CFLAGS =		-mcpu=cortex-m0 \
 			-mthumb-interwork \
 			-Werror \
 			-Wall \
+			-Wextra \
+			-Wcast-qual \
 			-O0 \
 			-nostdlib \
 			-nostartfiles \
@@ -42,13 +44,13 @@ rust: vectors.o
 	rustc main.rs --emit=obj
 
 clean:
-	rm -f *.bin *.o *.elf *.list 
+	rm -f *.bin *.o *.elf *.list log
 
 libtinycrypt.a:
 	cp config.mk ./tinycrypt/
 	cd tinycrypt && make
 
-.PHONY: math
+.PHONY: math clean ci qemu qemu-gdb 
 math:
 	$(AS) $(AFLAGS) math/*.S -o math/math.a
 
@@ -69,19 +71,22 @@ $(IMAGE).bin : memmap.ld vectors.o  main.o libtinycrypt.a math
 gdb: all
 	$(GDB) $(IMAGE) -x gdbfile $(IMAGE).elf
 
-qemu:
+qemu: $(IMAGE).bin
 	$(QFLAGS) $(IMAGE).elf
 
 qemu-gdb:
 	$(QFLAGS) $(IMAGE).elf -S -gdb tcp::1234
 
-ci: all
-	timeout 10 $(QFLAGS) $(IMAGE).elf > /tmp/output || true
-	cat /tmp/output
+ci: 
+	@timeout --preserve-status 4 $(QFLAGS) $(IMAGE).elf > out 2> err || true && grep "handled" out
 
 docker-ci:
 	cp -r * /tmp
 	cd /tmp && timeout 10 make ci || true
+
+newtest:
+	@timeout --preserve-status 4 qemu-system-arm -d guest_errors -M lm3s811evb -m 8K \
+		-nographic -kernel main.elf > out 2> err || true && grep "handled" out > /dev/null
 
 docker-qemu:
 	@docker run -ti cortexm 
