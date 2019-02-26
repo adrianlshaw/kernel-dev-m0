@@ -1,7 +1,7 @@
 sudo: enabled
 
 before_install:
-        - sudo apt-get update && sudo apt-get -y install make gcc-arm-none-eabi qemu-system-arm gdb-multiarch tmux
+        - sudo apt-get update && sudo apt-get -y install astyle make gcc-arm-none-eabi qemu-system-arm gdb-multiarch tmux
 
 language: bash
 
@@ -10,3 +10,21 @@ script:
         - timeout --foreground 5 qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel main.elf > test.run || true
         - cat test.run
         - grep "Success" test.run
+
+matrix:
+  include:
+    - env:
+      - NAME=astyle
+      install:
+        - >-
+          cd -
+        - astyle --version
+        - git fetch --all --unshallow --tags
+        - git fetch origin "${TRAVIS_BRANCH}"
+      script:
+        - >-
+          git diff --name-only --diff-filter=d FETCH_HEAD..HEAD \
+            | ( grep '.\(c\|cpp\|h\|hpp\)$' || true ) \
+            | ( fgrep -v -f .astyleignore || true ) \
+            | while read file; do astyle -n --options=.astylerc "${file}"; done
+        - git diff --exit-code --diff-filter=d --color
