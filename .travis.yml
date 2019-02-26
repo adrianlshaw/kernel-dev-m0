@@ -20,6 +20,8 @@ matrix:
           cd -
         - astyle --version
       script:
+        - git fetch --all --unshallow --tags
+        - git fetch origin "${TRAVIS_BRANCH}"
         - >-
           git diff --name-only --diff-filter=d FETCH_HEAD..HEAD \
             | ( grep '.\(c\|cpp\|h\|hpp\)$' || true ) \
