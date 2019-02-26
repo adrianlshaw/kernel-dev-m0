@@ -19,8 +19,6 @@ matrix:
         - >-
           cd -
         - astyle --version
-        - git fetch --all --unshallow --tags
-        - git fetch origin "${TRAVIS_BRANCH}"
       script:
         - >-
           git diff --name-only --diff-filter=d FETCH_HEAD..HEAD \
