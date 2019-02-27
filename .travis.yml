@@ -6,14 +6,10 @@ before_install:
 language: bash
 
 script:
-        - git fetch --all --unshallow --tags
-        - git fetch origin "${TRAVIS_BRANCH}"
-        - >-
-          git diff --name-only --diff-filter=d FETCH_HEAD..HEAD \
+        - git diff --name-only $TRAVIS_COMMIT_RANGE \ 
             | ( grep '.\(c\|cpp\|h\|hpp\)$' || true ) \
             | ( fgrep -v -f .astyleignore || true ) \
             | while read file; do astyle -n --options=.astylerc "${file}"; done
-        - git diff --exit-code --diff-filter=d --color
         - make PLAT=qemu
         - timeout --foreground 5 qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel main.elf > test.run || true
         - cat test.run
