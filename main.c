@@ -53,7 +53,7 @@ int puts(const char *str)
 {
 	while (*str) {
 		//*((unsigned volatile int *) UART_BASE) = *str++;
-		putc(*str++);
+		putc(NULL, *str++);
 	}
 	return 0;
 }
@@ -74,7 +74,7 @@ void memfault()
 
 static task_t tasks[2];
 task_t *current_task = &tasks[0]; // Must use static for it to automatically appear in .data section
-task_t *next_task = NULL;
+task_t *next_task = &tasks[1];
 
 void systick()
 {
@@ -217,6 +217,24 @@ void decode_cpuid(void)
 	}
 }
 
+void task_finished() {
+	while(1);
+}
+
+void init_task(uint32_t *stack) {
+
+	int i;
+	for (i=0; i<16; i++) {
+		stack = 0;
+		++stack;
+	}
+
+	*(stack) = (uint32_t) &task_finished;
+	*(stack+4) = (uint32_t) &task_test;
+	*(stack+8) = 0x01000000; // default XPSR value
+	tfp_printf("Done\n");
+}
+
 int main(void)
 {
 	uart_init();
@@ -247,6 +265,14 @@ int main(void)
 
 	/* Task creation */
 	current_task->sp = 0x20001FFF - 1000;
+
+	next_task->sp = 0x20001FFF - 2000 - 16; // need space for storing registers
+
+	init_task((uint32_t *) next_task->sp);
+
+	tfp_printf("Current Stack is at 0x%lx\n", current_task->sp);
+	tfp_printf("Next Stack is at 0x%lx\n", next_task->sp);
+	
 	start_task(current_task);
 
 	/* Should not reach here */

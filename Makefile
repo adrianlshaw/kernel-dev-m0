@@ -5,7 +5,7 @@ CC = $(CROSS_COMPILE)gcc
 AS = $(CROSS_COMPILE)as
 LD = $(CROSS_COMPILE)ld
 AR = $(CROSS_COMPILE)ar
-GDB = $(CROSS_COMPILE)gdb
+GDB = gdb-multiarch 
 OBJDUMP = $(CROSS_COMPILE)objdump
 OBJCOPY = $(CROSS_COMPILE)objcopy
 

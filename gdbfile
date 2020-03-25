@@ -4,4 +4,5 @@ file main.elf
 set architecture arm
 set arm fallback-mode thumb
 break main
+break *(pendsvasm+0)
 monitor reset halt

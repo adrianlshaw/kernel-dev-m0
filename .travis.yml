@@ -8,3 +8,4 @@ before_install:
 
 script:
 - docker run -ti --rm cortexm
+- sudo docker run -ti -v $PWD:/opt --cap-add=SYS_PTRACE cortexm

@@ -7,5 +7,4 @@ WORKDIR /opt
 COPY ./ /opt/
 ENV CC arm-none-eabi-gcc
 ENV CROSS_COMPILE arm-none-eabi-
-ENTRYPOINT [ "make" ]
-CMD [ "ci" ]
+ENTRYPOINT [ "/bin/bash", "-c", "make && timeout --preserve-status 4 qemu-system-arm -d guest_errors -M lm3s811evb -m 8K -nographic -kernel main.elf > out 2> err || true && grep handled out > /dev/null" ]
